@@ -2,12 +2,14 @@ import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 
 const router = Router()
-const userontroller = new UserController();
+const userController = new UserController();
 
-router.get('/', (req, res) => userontroller.listUsers(req, res))
+router.get('/', (req, res) => userController.listUsers(req, res))
 
-router.post('/', (req, res) => userontroller.createUser(req, res))
+router.post('/', (req, res) => userController.createUser(req, res))
 
-router.get('/:id', (req, res) => userontroller.getUserById(req, res))
+router.post('/login', (req, res) => userController.loginUser(req, res))
+
+router.get('/:id', (req, res) => userController.getUserById(req, res))
 
 export default router

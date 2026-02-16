@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 
 import { prisma } from '../lib/prisma';
+import { authMiddleware } from './middleware/authMiddleware';
 
 import userRoutes from './routes/UserRoute';
 import campaignRoutes from './routes/CampaignRoute';
@@ -20,6 +21,9 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/users', userRoutes);
+
+app.use(authMiddleware)
+
 app.use('/campaigns', campaignRoutes);
 app.use('/characters', characterRoutes);
 app.use('/journal-entries', journalEntryRoutes);
