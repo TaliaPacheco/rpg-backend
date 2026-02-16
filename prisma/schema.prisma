@@ -12,3 +12,87 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum SystemType {
+  FANTASIA
+  SCIFI
+}
+
+enum CampaignStatus {
+  ATIVA
+  FINALIZADA
+}
+
+enum QuestStatus {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  campaigns Campaign[]
+}
+
+model Campaign {
+  id             String         @id @default(uuid())
+  title          String
+  description    String?
+  system         SystemType
+  status         CampaignStatus @default(ATIVA)
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  characters     Character[]
+  quests         Quest[]
+  journalEntries JournalEntry[]
+
+  @@index([userId])
+}
+
+model Character {
+  id         String   @id @default(uuid())
+  name       String
+  class      String
+  race       String
+  level      Int      @default(1)
+  hp         Int
+  backstory  String?
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([campaignId])
+}
+
+model Quest {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  status      QuestStatus @default(PENDENTE)
+  reward      String?
+  campaignId  String
+  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([campaignId])
+}
+
+model JournalEntry {
+  id         String   @id @default(uuid())
+  content    String
+  eventDate  DateTime
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([campaignId])
+}
