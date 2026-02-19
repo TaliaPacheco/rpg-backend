@@ -6,10 +6,10 @@ export function generateToken(userId: string) {
     return jwt.sign({ userId }, JWT_SECRET!, { expiresIn: '7d' });
 }
 
-export function verifyToken(token: string): string | null {
-    try{ 
+export function verifyToken(token: string): { userId: string } | null {
+    try {
         const decoded = jwt.verify(token, JWT_SECRET!) as { userId: string };
-        return decoded.userId;
+        return decoded;
     } catch (error) {
         return null;
     }

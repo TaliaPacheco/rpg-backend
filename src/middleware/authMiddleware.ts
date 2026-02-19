@@ -21,7 +21,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction){
 
         const decoded = verifyToken(token)
 
-        if (!decoded){
+        if (!decoded ){
             res.status(401).json({ message: 'Token de autenticação inválido' });
             return
         }

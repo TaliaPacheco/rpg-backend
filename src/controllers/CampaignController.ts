@@ -2,12 +2,12 @@ import { Response, Request } from 'express';
 import { prisma } from '../../lib/prisma';
 
 export class CampaignController {
-    async getCampaignsByUserId(req: Request, res: Response){
-        try{
+    async getCampaignsByUserId(req: Request, res: Response) {
+        try {
             const { userId } = req.params
 
-            if(!userId || typeof userId !== 'string'){
-                res.status(404).json({ message: 'Usuario não encontrado'})
+            if (!userId || typeof userId !== 'string') {
+                res.status(404).json({ message: 'Usuario não encontrado' })
                 return
             }
 
@@ -31,11 +31,11 @@ export class CampaignController {
         }
     }
 
-    async createCampaign(req: Request, res: Response){
-        try{
+    async createCampaign(req: Request, res: Response) {
+        try {
             const { title, description, system, userId } = req.body
 
-            if(!title || !description || !userId || !system){
+            if (!title || !description || !userId || !system) {
                 res.status(400).json({ message: 'Dados da campanha incompletos' })
                 return
             }
@@ -55,12 +55,12 @@ export class CampaignController {
         }
     }
 
-    async deleteCampaign(req: Request, res: Response){
-        try{
+    async deleteCampaign(req: Request, res: Response) {
+        try {
             const { id } = req.params
 
-            if(!id || typeof id !== 'string'){
-                res.status(404).json({ message: 'Campanha não encontrada'})
+            if (!id || typeof id !== 'string') {
+                res.status(404).json({ message: 'Campanha não encontrada' })
                 return
             }
 

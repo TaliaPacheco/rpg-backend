@@ -22,6 +22,15 @@ export class UserController {
                 return
             }
 
+            const existingUser = await prisma.user.findUnique({
+                where: { email },
+            })
+
+            if (existingUser) {
+                res.status(409).json({ message: 'Email já está em uso' })
+                return
+            }
+
             const hashedPassword = await bcrypt.hash(password, 10);
 
             const user = await prisma.user.create({
@@ -67,7 +76,8 @@ export class UserController {
 
             res.json({ message: 'Login realizado com sucesso', 
                 token, 
-                user: { id: user.id, name: user.name, email: user.email } })
+                user: { id: user.id, name: user.name, email: user.email }
+            })
         }catch(error){
             res.status(500).json({ message: 'Erro ao realizar login'})
         }
