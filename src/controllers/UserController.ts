@@ -103,4 +103,50 @@ export class UserController {
             res.status(500).json({message: 'não foi possivel encontrar usuario'})
         }
     }
+
+    async deleteUser(req: Request, res: Response){
+        try {
+            const { id } = req.params
+
+            if (!id || typeof id !== 'string') {
+                res.status(404).json({ message: 'Usuario não encontrado' })
+                return
+            }
+
+            await prisma.user.delete({
+                where: { id },
+            })
+
+            res.json({ message: 'Usuario deletado com sucesso' })
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao deletar usuario' })
+        }
+    }
+
+    async updateUser(req: Request, res: Response){
+        try {
+            const { id } = req.params
+            const { name, email, password } = req.body
+
+            if (!id || typeof id !== 'string') {
+                res.status(404).json({ message: 'Usuario não encontrado' })
+                return
+            }
+
+            const updatedData: any = {}
+
+            if (name) updatedData.name = name
+            if (email) updatedData.email = email
+            if (password) updatedData.password = await bcrypt.hash(password, 10)
+
+            const updatedUser = await prisma.user.update({
+                where: { id },
+                data: updatedData,
+            })
+
+            res.json({ message: 'Usuario atualizado com sucesso', Usuario: updatedUser })
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao atualizar usuario' })
+        }
+    }
 }

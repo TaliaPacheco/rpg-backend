@@ -45,6 +45,34 @@ export class CharactersController {
         }
     }
 
+    async updateCharacter(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const { name, class: characterClass, race, hp, backstory, campaignId } = req.body;
+
+            if (!id || typeof id !== 'string') {
+                res.status(404).json({ error: 'Personagem não encontrado' });
+                return;
+            }
+
+            const updatedCharacter = await prisma.character.update({
+                where: { id },
+                data: {
+                    name,
+                    class: characterClass,
+                    race,
+                    hp,
+                    backstory,
+                    campaignId
+                }
+            });
+
+            res.json({ message: 'Personagem atualizado com sucesso', personagem: updatedCharacter });
+        } catch (error) {
+            res.status(500).json({ error: 'Falha ao atualizar personagem' });
+        }
+    }
+
     async deleteCharacter(req: Request, res: Response) {
         try {
             const { id } = req.params;

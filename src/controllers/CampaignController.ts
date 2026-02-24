@@ -55,6 +55,31 @@ export class CampaignController {
         }
     }
 
+    async updateCampaign(req: Request, res: Response) {
+        try {
+            const { id } = req.params
+            const { title, description, system } = req.body
+
+            if (!id || typeof id !== 'string') {
+                res.status(404).json({ message: 'Campanha não encontrada' })
+                return
+            }
+
+            const updatedCampaign = await prisma.campaign.update({
+                where: { id },
+                data: {
+                    title,
+                    description,
+                    system
+                }
+            })
+
+            res.json({ message: 'Campanha atualizada com sucesso', campanha: updatedCampaign })
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao atualizar campanha' })
+        }
+    }
+
     async deleteCampaign(req: Request, res: Response) {
         try {
             const { id } = req.params

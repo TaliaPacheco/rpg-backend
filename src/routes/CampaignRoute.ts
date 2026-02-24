@@ -10,6 +10,8 @@ router.get('/user/:userId', (req, res) => campaignController.getCampaignsByUserI
 
 router.post('/', validateSchema(createCampaignSchema), (req, res) => campaignController.createCampaign(req, res));
 
+router.put('/:id', (req, res) => campaignController.updateCampaign(req, res));
+
 router.delete('/:id', (req, res) => campaignController.deleteCampaign(req, res));
 
 export default router;
