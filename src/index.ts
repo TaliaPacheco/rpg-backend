@@ -2,6 +2,7 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
 
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from './middleware/authMiddleware';
@@ -19,6 +20,8 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use('/users', userRoutes);
 

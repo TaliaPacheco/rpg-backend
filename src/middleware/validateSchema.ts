@@ -7,8 +7,18 @@ export function validateSchema(schema: ZodSchema) {
         try {
             schema.parse(req.body);
             next();
-        } catch (error: ZodError | any) {
-            res.status(400).json({ message: 'Erro de validação', details: error.errors });
+        } catch (error: any) {
+            if (error instanceof ZodError) {
+                res.status(400).json({ 
+                    message: 'Erro de validação', 
+                    errors: error.issues.map((err: any) => ({
+                        field: err.path.join('.'),
+                        message: err.message
+                    }))
+                });
+            } else {
+                res.status(400).json({ message: 'Erro de validação', error });
+            }
         }
     }
 }

@@ -30,28 +30,45 @@ enum QuestStatus {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  campaigns Campaign[]
+  id                   String                @id @default(uuid())
+  name                 String
+  email                String                @unique
+  password             String
+  profileImage         String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  campaigns            Campaign[]
+  campaignParticipants CampaignParticipant[]
 }
 
 model Campaign {
-  id             String         @id @default(uuid())
+  id             String                @id @default(uuid())
   title          String
   description    String?
   system         SystemType
-  status         CampaignStatus @default(ATIVA)
+  status         CampaignStatus        @default(ATIVA)
+  campaignImage  String?
   userId         String
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime       @default(now())
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime              @default(now())
   characters     Character[]
   quests         Quest[]
   journalEntries JournalEntry[]
+  participants   CampaignParticipant[]
 
+  @@index([userId])
+}
+
+model CampaignParticipant {
+  id         String   @id @default(uuid())
+  campaignId String
+  userId     String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([campaignId, userId])
+  @@index([campaignId])
   @@index([userId])
 }
 
