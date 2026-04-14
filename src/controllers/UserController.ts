@@ -41,7 +41,6 @@ export class UserController {
                 data: {
                     title: `A Aventura de ${name}`,
                     description: 'Bem-vindo ao BitDragon! Esta é sua primeira campanha. Clique em editar para personalizá-la.',
-                    system: 'FANTASIA',
                     userId: user.id,
                 }
             })

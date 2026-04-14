@@ -40,9 +40,9 @@ export class CampaignController {
 
     async createCampaign(req: Request, res: Response) {
         try {
-            const { title, description, system, userId } = req.body
+            const { title, description, setting, userId } = req.body
 
-            if (!title || !description || !userId || !system) {
+            if (!title || !description || !userId) {
                 res.status(400).json({ message: 'Dados da campanha incompletos' })
                 return
             }
@@ -51,7 +51,7 @@ export class CampaignController {
                 data: {
                     title,
                     description,
-                    system,
+                    setting,
                     userId
                 }
             })
@@ -65,7 +65,7 @@ export class CampaignController {
     async updateCampaign(req: Request, res: Response) {
         try {
             const { id } = req.params
-            const { title, description, system } = req.body
+            const { title, description, setting } = req.body
 
             if (!id || typeof id !== 'string') {
                 res.status(404).json({ message: 'Campanha não encontrada' })
@@ -77,7 +77,7 @@ export class CampaignController {
                 data: {
                     title,
                     description,
-                    system
+                    setting
                 }
             })
 

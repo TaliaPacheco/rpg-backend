@@ -13,11 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum SystemType {
-  FANTASIA
-  SCIFI
-}
-
 enum CampaignStatus {
   ATIVA
   FINALIZADA
@@ -45,7 +40,7 @@ model Campaign {
   id             String                @id @default(uuid())
   title          String
   description    String?
-  system         SystemType
+  setting        String?
   status         CampaignStatus        @default(ATIVA)
   campaignImage  String?
   userId         String
