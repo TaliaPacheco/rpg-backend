@@ -7,7 +7,9 @@ import { deleteUploadedFile, getFilenameFromPath } from '../middleware/uploadMid
 export class UserController {
     async listUsers(req: Request, res: Response) {
         try{
-            const users = await prisma.user.findMany();
+            const users = await prisma.user.findMany({
+                omit: { password: true },
+            });
             res.json({message:'Lista dos usuarios processada com sucesso!', Usuarios: users})
         } catch(error){
             res.status(500).json({ message:'Não foi possivel retornar a tabela'})
