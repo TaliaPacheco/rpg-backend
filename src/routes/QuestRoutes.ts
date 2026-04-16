@@ -6,7 +6,7 @@ import { createQuestSchema } from '../schemas/questSchema';
 const router = Router();
 const questsController = new QuestsController();
 
-router.get('/user/:userId', (req, res) => questsController.getQuestsByUserId(req, res));
+router.get('/campaign/:campaignId', (req, res) => questsController.getQuestsByCampaignId(req, res));
 
 router.post('/', validateSchema(createQuestSchema), (req, res) => questsController.createQuest(req, res));
 

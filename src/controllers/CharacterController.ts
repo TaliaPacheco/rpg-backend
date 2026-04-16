@@ -1,30 +1,42 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
+import { checkCampaignOwnership } from '../lib/ownership';
 
 export class CharactersController {
     async getCharactersByCampaignId(req: Request, res: Response) {
         try {
             const { campaignId } = req.params;
+            const userId = req.userId;
 
-            if (!campaignId || typeof campaignId !== 'string') {
-                res.status(400).json({ error: 'Campaign ID é obrigatório' });
+            const check = await checkCampaignOwnership(campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
                 return;
             }
+
             const characters = await prisma.character.findMany({
                 where: { campaignId }
             });
+
             res.json(characters);
         } catch (error) {
-            res.status(500).json({ error: 'Falha ao buscar personagens' });
+            res.status(500).json({ message: 'Erro ao buscar personagens' });
         }
     }
 
     async createCharacter(req: Request, res: Response) {
         try {
+            const userId = req.userId;
             const { name, class: characterClass, race, hp, backstory, campaignId } = req.body;
 
             if (!name || !characterClass || !race || !hp || !campaignId) {
-                res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+                res.status(400).json({ message: 'Todos os campos são obrigatórios' });
+                return;
+            }
+
+            const check = await checkCampaignOwnership(campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
                 return;
             }
 
@@ -41,17 +53,28 @@ export class CharactersController {
 
             res.status(201).json(newCharacter);
         } catch (error) {
-            res.status(500).json({ error: 'Falha ao criar personagem' });
+            res.status(500).json({ message: 'Erro ao criar personagem' });
         }
     }
 
     async updateCharacter(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { name, class: characterClass, race, hp, backstory, campaignId } = req.body;
+            const userId = req.userId;
+            const { name, class: characterClass, race, hp, backstory } = req.body;
 
-            if (!id || typeof id !== 'string') {
-                res.status(404).json({ error: 'Personagem não encontrado' });
+            const character = await prisma.character.findUnique({
+                where: { id },
+                include: { campaign: { select: { userId: true } } }
+            });
+
+            if (!character) {
+                res.status(404).json({ message: 'Personagem não encontrado' });
+                return;
+            }
+
+            if (character.campaign.userId !== userId) {
+                res.status(403).json({ message: 'Você não tem permissão para alterar este personagem' });
                 return;
             }
 
@@ -62,23 +85,33 @@ export class CharactersController {
                     class: characterClass,
                     race,
                     hp,
-                    backstory,
-                    campaignId
+                    backstory
                 }
             });
 
             res.json({ message: 'Personagem atualizado com sucesso', personagem: updatedCharacter });
         } catch (error) {
-            res.status(500).json({ error: 'Falha ao atualizar personagem' });
+            res.status(500).json({ message: 'Erro ao atualizar personagem' });
         }
     }
 
     async deleteCharacter(req: Request, res: Response) {
         try {
             const { id } = req.params;
+            const userId = req.userId;
 
-            if (!id || typeof id !== 'string') {
-                res.status(400).json({ error: 'ID do personagem é obrigatório' });
+            const character = await prisma.character.findUnique({
+                where: { id },
+                include: { campaign: { select: { userId: true } } }
+            });
+
+            if (!character) {
+                res.status(404).json({ message: 'Personagem não encontrado' });
+                return;
+            }
+
+            if (character.campaign.userId !== userId) {
+                res.status(403).json({ message: 'Você não tem permissão para deletar este personagem' });
                 return;
             }
 
@@ -86,9 +119,9 @@ export class CharactersController {
                 where: { id }
             });
 
-            res.json(deletedCharacter);
+            res.json({ message: 'Personagem deletado com sucesso', personagem: deletedCharacter });
         } catch (error) {
-            res.status(500).json({ error: 'Falha ao deletar personagem' });
+            res.status(500).json({ message: 'Erro ao deletar personagem' });
         }
     }
 }

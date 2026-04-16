@@ -6,7 +6,7 @@ import { createJournalSchema } from "../schemas/JournalSchema";
 const router = Router();
 const journalController = new journalEntriesController();
 
-router.get('/user/:campaignId', (req, res) => journalController.getJournalEntriesByCampaignId(req, res));
+router.get('/campaign/:campaignId', (req, res) => journalController.getJournalEntriesByCampaignId(req, res));
 
 router.post('/', validateSchema(createJournalSchema), (req, res) => journalController.createJournalEntry(req, res));
 

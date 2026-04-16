@@ -7,7 +7,7 @@ import { uploadMiddleware } from '../middleware/uploadMiddleware';
 const router = Router();
 const campaignController = new CampaignController();
 
-router.get('/user/:userId', (req, res) => campaignController.getCampaignsByUserId(req, res));
+router.get('/mine', (req, res) => campaignController.getMyCampaigns(req, res));
 
 router.post('/', validateSchema(createCampaignSchema), (req, res) => campaignController.createCampaign(req, res));
 

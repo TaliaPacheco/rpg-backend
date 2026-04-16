@@ -1,19 +1,16 @@
 import { Response, Request } from 'express';
 import { prisma } from '../../lib/prisma';
 import { deleteUploadedFile, getFilenameFromPath } from '../middleware/uploadMiddleware';
+import { checkCampaignOwnership } from '../lib/ownership';
 
 export class CampaignController {
-    async getCampaignsByUserId(req: Request, res: Response) {
+    async getMyCampaigns(req: Request, res: Response) {
         try {
-            const { userId } = req.params
-
-            if (!userId || typeof userId !== 'string') {
-                res.status(400).json({ message: 'UserId inválido' })
-                return
-            }
+            const userId = req.userId;
 
             const campaigns = await prisma.campaign.findMany({
                 where: { userId },
+                orderBy: { createdAt: 'desc' },
                 include: {
                     characters: true,
                     quests: true,
@@ -29,23 +26,19 @@ export class CampaignController {
                             }
                         }
                     }
-                },
-            })
+                }
+            });
 
-            res.json(campaigns.length > 0 ? campaigns[0] : null)
+            res.json(campaigns);
         } catch (error) {
-            res.status(500).json({ message: 'Erro ao buscar campanhas' })
+            res.status(500).json({ message: 'Erro ao buscar campanhas' });
         }
     }
 
     async createCampaign(req: Request, res: Response) {
         try {
-            const { title, description, setting, userId } = req.body
-
-            if (!title || !description || !userId) {
-                res.status(400).json({ message: 'Dados da campanha incompletos' })
-                return
-            }
+            const userId = req.userId;
+            const { title, description, setting } = req.body;
 
             const newCampaign = await prisma.campaign.create({
                 data: {
@@ -54,22 +47,24 @@ export class CampaignController {
                     setting,
                     userId
                 }
-            })
+            });
 
-            res.status(201).json({ message: 'Campanha criada com sucesso', campanha: newCampaign })
+            res.status(201).json({ message: 'Campanha criada com sucesso', campanha: newCampaign });
         } catch (error) {
-            res.status(500).json({ message: 'Erro ao criar campanha' })
+            res.status(500).json({ message: 'Erro ao criar campanha' });
         }
     }
 
     async updateCampaign(req: Request, res: Response) {
         try {
-            const { id } = req.params
-            const { title, description, setting } = req.body
+            const { id } = req.params;
+            const userId = req.userId;
+            const { title, description, setting } = req.body;
 
-            if (!id || typeof id !== 'string') {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
             }
 
             const updatedCampaign = await prisma.campaign.update({
@@ -79,119 +74,110 @@ export class CampaignController {
                     description,
                     setting
                 }
-            })
+            });
 
-            res.json({ message: 'Campanha atualizada com sucesso', campanha: updatedCampaign })
+            res.json({ message: 'Campanha atualizada com sucesso', campanha: updatedCampaign });
         } catch (error) {
-            res.status(500).json({ message: 'Erro ao atualizar campanha' })
+            res.status(500).json({ message: 'Erro ao atualizar campanha' });
         }
     }
 
     async deleteCampaign(req: Request, res: Response) {
         try {
-            const { id } = req.params
+            const { id } = req.params;
+            const userId = req.userId;
 
-            if (!id || typeof id !== 'string') {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
             }
 
             const deletedCampaign = await prisma.campaign.delete({
                 where: { id }
-            })
+            });
 
-            res.json({ message: 'Campanha deletada com sucesso', campanha: deletedCampaign })
+            res.json({ message: 'Campanha deletada com sucesso', campanha: deletedCampaign });
         } catch (error) {
-            res.status(500).json({ message: 'Erro ao deletar campanha' })
+            res.status(500).json({ message: 'Erro ao deletar campanha' });
         }
     }
 
     async uploadCampaignImage(req: Request, res: Response) {
         try {
-            const { id } = req.params
-
-            if (!id || typeof id !== 'string') {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
-            }
+            const { id } = req.params;
+            const userId = req.userId;
 
             if (!req.file) {
-                res.status(400).json({ message: 'Nenhum arquivo foi enviado' })
-                return
+                res.status(400).json({ message: 'Nenhum arquivo foi enviado' });
+                return;
             }
 
-            const campaign = await prisma.campaign.findUnique({
-                where: { id },
-            })
-
-            if (!campaign) {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                deleteUploadedFile(getFilenameFromPath(req.file.path));
+                res.status(check.status).json({ message: check.message });
+                return;
             }
 
-            if (campaign.campaignImage) {
-                deleteUploadedFile(campaign.campaignImage)
+            const campaign = await prisma.campaign.findUnique({ where: { id } });
+
+            if (campaign?.campaignImage) {
+                deleteUploadedFile(campaign.campaignImage);
             }
 
-            const filename = getFilenameFromPath(req.file.path)
+            const filename = getFilenameFromPath(req.file.path);
 
             const updatedCampaign = await prisma.campaign.update({
                 where: { id },
                 data: {
                     campaignImage: filename
                 }
-            })
+            });
 
-            res.status(200).json({ 
-                message: 'Imagem da campanha atualizada com sucesso', 
+            res.status(200).json({
+                message: 'Imagem da campanha atualizada com sucesso',
                 campaign: updatedCampaign,
                 imageUrl: `/uploads/${filename}`
-            })
+            });
         } catch (error) {
             if (req.file) {
-                deleteUploadedFile(getFilenameFromPath(req.file.path))
+                deleteUploadedFile(getFilenameFromPath(req.file.path));
             }
-            res.status(500).json({ message: 'Erro ao fazer upload da imagem' })
+            res.status(500).json({ message: 'Erro ao fazer upload da imagem' });
         }
     }
 
     async addParticipant(req: Request, res: Response) {
         try {
-            const { id } = req.params
-            const { userId } = req.body
+            const { id } = req.params;
+            const userId = req.userId;
+            const { userId: participantUserId } = req.body;
 
-            if (!id || typeof id !== 'string') {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
+            if (!participantUserId || typeof participantUserId !== 'string') {
+                res.status(400).json({ message: 'UserId do participante inválido' });
+                return;
             }
 
-            if (!userId || typeof userId !== 'string') {
-                res.status(400).json({ message: 'UserId inválido' })
-                return
-            }
-
-            const campaign = await prisma.campaign.findUnique({
-                where: { id }
-            })
-
-            if (!campaign) {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
             }
 
             const user = await prisma.user.findUnique({
-                where: { id: userId }
-            })
+                where: { id: participantUserId }
+            });
 
             if (!user) {
-                res.status(404).json({ message: 'Usuário não encontrado' })
-                return
+                res.status(404).json({ message: 'Usuário não encontrado' });
+                return;
             }
 
             const participant = await prisma.campaignParticipant.create({
                 data: {
                     campaignId: id,
-                    userId: userId
+                    userId: participantUserId
                 },
                 include: {
                     user: {
@@ -202,56 +188,51 @@ export class CampaignController {
                         }
                     }
                 }
-            })
+            });
 
-            res.status(201).json({ 
-                message: 'Participante adicionado com sucesso', 
-                participant 
-            })
+            res.status(201).json({
+                message: 'Participante adicionado com sucesso',
+                participant
+            });
         } catch (error: any) {
-            // Erro único constraint (usuário já é participante)
             if (error.code === 'P2002') {
-                res.status(400).json({ message: 'Usuário já é participante desta campanha' })
-                return
+                res.status(400).json({ message: 'Usuário já é participante desta campanha' });
+                return;
             }
-            res.status(500).json({ message: 'Erro ao adicionar participante' })
+            res.status(500).json({ message: 'Erro ao adicionar participante' });
         }
     }
 
     async removeParticipant(req: Request, res: Response) {
         try {
-            const { id, userId } = req.params
+            const { id, userId: participantUserId } = req.params;
+            const requesterId = req.userId;
 
-            if (!id || typeof id !== 'string') {
-                res.status(404).json({ message: 'Campanha não encontrada' })
-                return
-            }
-
-            if (!userId || typeof userId !== 'string') {
-                res.status(400).json({ message: 'UserId inválido' })
-                return
+            const check = await checkCampaignOwnership(id, requesterId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
             }
 
             const participant = await prisma.campaignParticipant.delete({
                 where: {
                     campaignId_userId: {
                         campaignId: id,
-                        userId: userId
+                        userId: participantUserId
                     }
                 }
-            })
+            });
 
-            res.json({ 
-                message: 'Participante removido com sucesso', 
-                participant 
-            })
+            res.json({
+                message: 'Participante removido com sucesso',
+                participant
+            });
         } catch (error: any) {
             if (error.code === 'P2025') {
-                res.status(404).json({ message: 'Participante não encontrado' })
-                return
+                res.status(404).json({ message: 'Participante não encontrado' });
+                return;
             }
-            res.status(500).json({ message: 'Erro ao remover participante' })
+            res.status(500).json({ message: 'Erro ao remover participante' });
         }
     }
-
 }
