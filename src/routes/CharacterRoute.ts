@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { CharactersController } from "../controllers/CharacterController";
 import { validateSchema } from "../middleware/validateSchema";
-import { createCharacterSchema } from "../schemas/characterSchema";
+import { createCharacterSchema, updateCharacterSchema } from "../schemas/characterSchema";
 
 const router = Router();
 const charactersController = new CharactersController();
@@ -10,7 +10,7 @@ router.get('/campaign/:campaignId', (req, res) => charactersController.getCharac
 
 router.post('/', validateSchema(createCharacterSchema), (req, res) => charactersController.createCharacter(req, res));
 
-router.put('/:id', (req, res) => charactersController.updateCharacter(req, res));
+router.put('/:id', validateSchema(updateCharacterSchema), (req, res) => charactersController.updateCharacter(req, res));
 
 router.delete('/:id', (req, res) => charactersController.deleteCharacter(req, res));
 

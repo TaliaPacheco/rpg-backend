@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
-import { checkCampaignOwnership } from '../lib/ownership';
+import { checkCampaignAccess, checkCharacterPermission } from '../lib/ownership';
 
 export class CharactersController {
     async getCharactersByCampaignId(req: Request, res: Response) {
@@ -8,14 +8,18 @@ export class CharactersController {
             const { campaignId } = req.params;
             const userId = req.userId;
 
-            const check = await checkCampaignOwnership(campaignId, userId);
-            if (!check.ok) {
-                res.status(check.status).json({ message: check.message });
+            const access = await checkCampaignAccess(campaignId, userId);
+            if (!access.ok) {
+                res.status(access.status).json({ message: access.message });
                 return;
             }
 
             const characters = await prisma.character.findMany({
-                where: { campaignId }
+                where: { campaignId },
+                include: {
+                    inventory: true,
+                    spells: true
+                }
             });
 
             res.json(characters);
@@ -28,22 +32,14 @@ export class CharactersController {
         try {
             const userId = req.userId;
             const {
-                name, class: characterClass, race,
-                hpMax, hpCurrent,
-                strength, dexterity, constitution,
-                intelligence, wisdom, charisma,
-                armorClass, proficiencyBonus,
-                backstory, campaignId
+                name, class: characterClass, race, hpMax, hpCurrent,
+                strength, dexterity, constitution, intelligence, wisdom, charisma,
+                armorClass, proficiencyBonus, backstory, campaignId
             } = req.body;
 
-            if (!name || !characterClass || !race || !hpMax || hpCurrent === undefined || !campaignId) {
-                res.status(400).json({ message: 'Todos os campos obrigatórios devem ser preenchidos' });
-                return;
-            }
-
-            const check = await checkCampaignOwnership(campaignId, userId);
-            if (!check.ok) {
-                res.status(check.status).json({ message: check.message });
+            const access = await checkCampaignAccess(campaignId, userId);
+            if (!access.ok) {
+                res.status(access.status).json({ message: access.message });
                 return;
             }
 
@@ -53,7 +49,7 @@ export class CharactersController {
                     class: characterClass,
                     race,
                     hpMax,
-                    hpCurrent,
+                    hpCurrent: hpCurrent ?? hpMax,
                     strength,
                     dexterity,
                     constitution,
@@ -68,7 +64,7 @@ export class CharactersController {
                 }
             });
 
-            res.status(201).json(newCharacter);
+            res.status(201).json({ message: 'Personagem criado com sucesso', personagem: newCharacter });
         } catch (error) {
             res.status(500).json({ message: 'Erro ao criar personagem' });
         }
@@ -79,26 +75,14 @@ export class CharactersController {
             const { id } = req.params;
             const userId = req.userId;
             const {
-                name, class: characterClass, race,
-                hpMax, hpCurrent,
-                strength, dexterity, constitution,
-                intelligence, wisdom, charisma,
-                armorClass, proficiencyBonus,
-                backstory
+                name, class: characterClass, race, hpMax, hpCurrent,
+                strength, dexterity, constitution, intelligence, wisdom, charisma,
+                armorClass, proficiencyBonus, backstory
             } = req.body;
 
-            const character = await prisma.character.findUnique({
-                where: { id },
-                include: { campaign: { select: { userId: true } } }
-            });
-
-            if (!character) {
-                res.status(404).json({ message: 'Personagem não encontrado' });
-                return;
-            }
-
-            if (character.campaign.userId !== userId) {
-                res.status(403).json({ message: 'Você não tem permissão para alterar este personagem' });
+            const permission = await checkCharacterPermission(id, userId);
+            if (!permission.ok) {
+                res.status(permission.status).json({ message: permission.message });
                 return;
             }
 
@@ -133,18 +117,9 @@ export class CharactersController {
             const { id } = req.params;
             const userId = req.userId;
 
-            const character = await prisma.character.findUnique({
-                where: { id },
-                include: { campaign: { select: { userId: true } } }
-            });
-
-            if (!character) {
-                res.status(404).json({ message: 'Personagem não encontrado' });
-                return;
-            }
-
-            if (character.campaign.userId !== userId) {
-                res.status(403).json({ message: 'Você não tem permissão para deletar este personagem' });
+            const permission = await checkCharacterPermission(id, userId);
+            if (!permission.ok) {
+                res.status(permission.status).json({ message: permission.message });
                 return;
             }
 
