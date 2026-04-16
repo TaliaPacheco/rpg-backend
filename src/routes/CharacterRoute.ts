@@ -15,7 +15,9 @@ router.put('/:id', validateSchema(updateCharacterSchema), (req, res) => characte
 router.delete('/:id', (req, res) => charactersController.deleteCharacter(req, res));
 
 import inventoryRoutes from './InventoryRoute';
+import spellRoutes from './SpellRoute';
 
 router.use('/:characterId/inventory', inventoryRoutes);
+router.use('/:characterId/spells', spellRoutes);
 
 export default router;
