@@ -33,6 +33,7 @@ model User {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   campaigns            Campaign[]
+  characters           Character[]
   campaignParticipants CampaignParticipant[]
 }
 
@@ -68,19 +69,59 @@ model CampaignParticipant {
 }
 
 model Character {
-  id         String   @id @default(uuid())
-  name       String
-  class      String
-  race       String
-  level      Int      @default(1)
-  hp         Int
-  backstory  String?
-  campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String           @id @default(uuid())
+  name             String
+  class            String
+  race             String
+  level            Int              @default(1)
+  hpMax            Int
+  hpCurrent        Int
+  strength         Int              @default(10)
+  dexterity        Int              @default(10)
+  constitution     Int              @default(10)
+  intelligence     Int              @default(10)
+  wisdom           Int              @default(10)
+  charisma         Int              @default(10)
+  armorClass       Int              @default(10)
+  proficiencyBonus Int              @default(2)
+  backstory        String?
+  campaignId       String
+  campaign         Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory        InventoryItem[]
+  spells           CharacterSpell[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@index([campaignId])
+  @@index([userId])
+}
+
+model InventoryItem {
+  id          String    @id @default(uuid())
+  name        String
+  quantity    Int       @default(1)
+  description String?
+  equipped    Boolean   @default(false)
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId])
+}
+
+model CharacterSpell {
+  id          String    @id @default(uuid())
+  name        String
+  level       Int       @default(0)
+  description String?
+  prepared    Boolean   @default(false)
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId])
 }
 
 model Quest {

@@ -27,10 +27,17 @@ export class CharactersController {
     async createCharacter(req: Request, res: Response) {
         try {
             const userId = req.userId;
-            const { name, class: characterClass, race, hp, backstory, campaignId } = req.body;
+            const {
+                name, class: characterClass, race,
+                hpMax, hpCurrent,
+                strength, dexterity, constitution,
+                intelligence, wisdom, charisma,
+                armorClass, proficiencyBonus,
+                backstory, campaignId
+            } = req.body;
 
-            if (!name || !characterClass || !race || !hp || !campaignId) {
-                res.status(400).json({ message: 'Todos os campos são obrigatórios' });
+            if (!name || !characterClass || !race || !hpMax || hpCurrent === undefined || !campaignId) {
+                res.status(400).json({ message: 'Todos os campos obrigatórios devem ser preenchidos' });
                 return;
             }
 
@@ -45,9 +52,19 @@ export class CharactersController {
                     name,
                     class: characterClass,
                     race,
-                    hp,
+                    hpMax,
+                    hpCurrent,
+                    strength,
+                    dexterity,
+                    constitution,
+                    intelligence,
+                    wisdom,
+                    charisma,
+                    armorClass,
+                    proficiencyBonus,
                     backstory,
-                    campaignId
+                    campaignId,
+                    userId
                 }
             });
 
@@ -61,7 +78,14 @@ export class CharactersController {
         try {
             const { id } = req.params;
             const userId = req.userId;
-            const { name, class: characterClass, race, hp, backstory } = req.body;
+            const {
+                name, class: characterClass, race,
+                hpMax, hpCurrent,
+                strength, dexterity, constitution,
+                intelligence, wisdom, charisma,
+                armorClass, proficiencyBonus,
+                backstory
+            } = req.body;
 
             const character = await prisma.character.findUnique({
                 where: { id },
@@ -84,7 +108,16 @@ export class CharactersController {
                     name,
                     class: characterClass,
                     race,
-                    hp,
+                    hpMax,
+                    hpCurrent,
+                    strength,
+                    dexterity,
+                    constitution,
+                    intelligence,
+                    wisdom,
+                    charisma,
+                    armorClass,
+                    proficiencyBonus,
                     backstory
                 }
             });
