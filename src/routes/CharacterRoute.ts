@@ -14,4 +14,8 @@ router.put('/:id', validateSchema(updateCharacterSchema), (req, res) => characte
 
 router.delete('/:id', (req, res) => charactersController.deleteCharacter(req, res));
 
+import inventoryRoutes from './InventoryRoute';
+
+router.use('/:characterId/inventory', inventoryRoutes);
+
 export default router;
