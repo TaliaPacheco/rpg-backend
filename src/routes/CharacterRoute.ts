@@ -2,6 +2,8 @@ import { Router } from "express";
 import { CharactersController } from "../controllers/CharacterController";
 import { validateSchema } from "../middleware/validateSchema";
 import { createCharacterSchema, updateCharacterSchema } from "../schemas/characterSchema";
+import inventoryRoutes from './InventoryRoute';
+import spellRoutes from './SpellRoute';
 
 const router = Router();
 const charactersController = new CharactersController();
@@ -13,9 +15,6 @@ router.post('/', validateSchema(createCharacterSchema), (req, res) => characters
 router.put('/:id', validateSchema(updateCharacterSchema), (req, res) => charactersController.updateCharacter(req, res));
 
 router.delete('/:id', (req, res) => charactersController.deleteCharacter(req, res));
-
-import inventoryRoutes from './InventoryRoute';
-import spellRoutes from './SpellRoute';
 
 router.use('/:characterId/inventory', inventoryRoutes);
 router.use('/:characterId/spells', spellRoutes);
