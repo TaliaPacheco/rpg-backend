@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Request, Response } from '../types/express';
 import { CampaignController } from '../controllers/CampaignController';
 import { validateSchema } from '../middleware/validateSchema';
 import { createCampaignSchema } from '../schemas/campaingSchema';
@@ -13,7 +14,7 @@ router.post('/', validateSchema(createCampaignSchema), (req, res) => campaignCon
 
 router.put('/:id', (req, res) => campaignController.updateCampaign(req, res));
 
-router.post('/:id/upload-campaign-image', uploadMiddleware.single('campaignImage'), (req, res) => campaignController.uploadCampaignImage(req, res));
+router.post('/:id/upload-campaign-image', uploadMiddleware.single('campaignImage'), (req: Request, res: Response) => campaignController.uploadCampaignImage(req, res));
 
 router.post('/:id/participants', (req, res) => campaignController.addParticipant(req, res));
 

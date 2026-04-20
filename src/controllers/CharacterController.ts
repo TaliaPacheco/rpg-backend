@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import { checkCampaignAccess, checkCharacterPermission } from '../lib/ownership';
 

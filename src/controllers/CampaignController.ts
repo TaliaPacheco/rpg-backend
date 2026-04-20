@@ -1,4 +1,4 @@
-import { Response, Request } from 'express';
+import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import { deleteUploadedFile, getFilenameFromPath } from '../middleware/uploadMiddleware';
 import { checkCampaignOwnership } from '../lib/ownership';

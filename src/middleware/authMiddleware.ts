@@ -1,13 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from '../types/express';
 import { verifyToken } from '../config/authConfig';
-
-declare global {
-    namespace Express {
-        interface Request {
-            userId: string;
-        }
-    }
-}
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction){
     try {
