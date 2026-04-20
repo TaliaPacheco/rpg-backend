@@ -1,21 +1,10 @@
-import type { Request, Response } from 'express';
+import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../config/authConfig';
 import { deleteUploadedFile, getFilenameFromPath } from '../middleware/uploadMiddleware';
 
 export class UserController {
-    async listUsers(req: Request, res: Response) {
-        try{
-            const users = await prisma.user.findMany({
-                omit: { password: true },
-            });
-            res.json({message:'Lista dos usuarios processada com sucesso!', Usuarios: users})
-        } catch(error){
-            res.status(500).json({ message:'Não foi possivel retornar a tabela'})
-        }
-    }
- 
     async createUser(req: Request, res: Response){
         try{
             const { name, email, password } = req.body
@@ -102,6 +91,7 @@ export class UserController {
 
             const user = await prisma.user.findUnique({
                 where: { id },
+                omit: { password: true },
             })
 
             if (!user) {
@@ -124,6 +114,11 @@ export class UserController {
                 return
             }
 
+            if (req.userId !== id) {
+                res.status(403).json({ message: 'Você só pode deletar a própria conta' })
+                return
+            }
+
             await prisma.user.delete({
                 where: { id },
             })
@@ -141,6 +136,11 @@ export class UserController {
 
             if (!id || typeof id !== 'string') {
                 res.status(404).json({ message: 'Usuario não encontrado' })
+                return
+            }
+
+            if (req.userId !== id) {
+                res.status(403).json({ message: 'Você só pode editar a própria conta' })
                 return
             }
 
@@ -167,6 +167,14 @@ export class UserController {
 
             if (!id || typeof id !== 'string') {
                 res.status(404).json({ message: 'Usuario não encontrado' })
+                return
+            }
+
+            if (req.userId !== id) {
+                if (req.file) {
+                    deleteUploadedFile(getFilenameFromPath(req.file.path))
+                }
+                res.status(403).json({ message: 'Você só pode alterar a própria imagem de perfil' })
                 return
             }
 
