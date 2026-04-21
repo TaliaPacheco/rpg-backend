@@ -59,7 +59,7 @@ export class CampaignController {
         try {
             const { id } = req.params;
             const userId = req.userId;
-            const { title, description, setting } = req.body;
+            const { title, description, setting, status } = req.body;
 
             const check = await checkCampaignOwnership(id, userId);
             if (!check.ok) {
@@ -72,7 +72,8 @@ export class CampaignController {
                 data: {
                     title,
                     description,
-                    setting
+                    setting,
+                    status
                 }
             });
 
