@@ -68,7 +68,7 @@ export class journalEntriesController {
 
             const journalEntry = await prisma.journalEntry.findUnique({
                 where: { id },
-                include: { campaign: { select: { userId: true } } }
+                select: { campaignId: true }
             });
 
             if (!journalEntry) {
@@ -76,8 +76,9 @@ export class journalEntriesController {
                 return;
             }
 
-            if (journalEntry.campaign.userId !== userId) {
-                res.status(403).json({ message: 'Você não tem permissão para alterar esta entrada' });
+            const check = await checkCampaignOwnership(journalEntry.campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
                 return;
             }
 
@@ -99,7 +100,7 @@ export class journalEntriesController {
 
             const journalEntry = await prisma.journalEntry.findUnique({
                 where: { id },
-                include: { campaign: { select: { userId: true } } }
+                select: { campaignId: true }
             });
 
             if (!journalEntry) {
@@ -107,8 +108,9 @@ export class journalEntriesController {
                 return;
             }
 
-            if (journalEntry.campaign.userId !== userId) {
-                res.status(403).json({ message: 'Você não tem permissão para deletar esta entrada' });
+            const check = await checkCampaignOwnership(journalEntry.campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
                 return;
             }
 

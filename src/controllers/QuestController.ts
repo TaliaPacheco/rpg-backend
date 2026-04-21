@@ -65,7 +65,7 @@ export class QuestsController {
 
             const quest = await prisma.quest.findUnique({
                 where: { id },
-                include: { campaign: { select: { userId: true } } }
+                select: { campaignId: true }
             });
 
             if (!quest) {
@@ -73,8 +73,9 @@ export class QuestsController {
                 return;
             }
 
-            if (quest.campaign.userId !== userId) {
-                res.status(403).json({ message: 'Você não tem permissão para alterar esta quest' });
+            const check = await checkCampaignOwnership(quest.campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
                 return;
             }
 
@@ -101,7 +102,7 @@ export class QuestsController {
 
             const quest = await prisma.quest.findUnique({
                 where: { id },
-                include: { campaign: { select: { userId: true } } }
+                select: { campaignId: true }
             });
 
             if (!quest) {
@@ -109,8 +110,9 @@ export class QuestsController {
                 return;
             }
 
-            if (quest.campaign.userId !== userId) {
-                res.status(403).json({ message: 'Você não tem permissão para deletar esta quest' });
+            const check = await checkCampaignOwnership(quest.campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
                 return;
             }
 
