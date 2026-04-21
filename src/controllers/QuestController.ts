@@ -1,6 +1,6 @@
 import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
-import { checkCampaignOwnership } from '../lib/ownership';
+import { checkCampaignAccess, checkCampaignOwnership } from '../lib/ownership';
 
 export class QuestsController {
     async getQuestsByCampaignId(req: Request, res: Response) {
@@ -8,7 +8,7 @@ export class QuestsController {
             const { campaignId } = req.params;
             const userId = req.userId;
 
-            const check = await checkCampaignOwnership(campaignId, userId);
+            const check = await checkCampaignAccess(campaignId, userId);
             if (!check.ok) {
                 res.status(check.status).json({ message: check.message });
                 return;
