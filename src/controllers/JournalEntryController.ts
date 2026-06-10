@@ -15,7 +15,10 @@ export class journalEntriesController {
             }
 
             const journalEntries = await prisma.journalEntry.findMany({
-                where: { campaignId },
+                where: {
+                    campaignId,
+                    ...(check.role === 'participant' ? { visibleToPlayers: true } : {})
+                },
                 orderBy: { eventDate: 'desc' }
             });
 
@@ -28,7 +31,7 @@ export class journalEntriesController {
     async createJournalEntry(req: Request, res: Response) {
         try {
             const userId = req.userId;
-            const { content, campaignId } = req.body;
+            const { content, campaignId, visibleToPlayers } = req.body;
 
             if (!content || !campaignId) {
                 res.status(400).json({ message: 'Todos os campos são obrigatórios' });
@@ -45,7 +48,8 @@ export class journalEntriesController {
                 data: {
                     eventDate: new Date(),
                     content,
-                    campaignId
+                    campaignId,
+                    visibleToPlayers: visibleToPlayers ?? false
                 }
             });
 
@@ -59,12 +63,7 @@ export class journalEntriesController {
         try {
             const { id } = req.params;
             const userId = req.userId;
-            const { content } = req.body;
-
-            if (!content) {
-                res.status(400).json({ message: 'O campo content é obrigatório' });
-                return;
-            }
+            const { content, visibleToPlayers } = req.body;
 
             const journalEntry = await prisma.journalEntry.findUnique({
                 where: { id },
@@ -84,7 +83,7 @@ export class journalEntriesController {
 
             const updatedJournalEntry = await prisma.journalEntry.update({
                 where: { id },
-                data: { content }
+                data: { content, visibleToPlayers }
             });
 
             res.json({ message: 'Entrada de diário atualizada com sucesso', journalEntry: updatedJournalEntry });
@@ -119,6 +118,34 @@ export class journalEntriesController {
             res.json({ message: 'Entrada de diário deletada com sucesso' });
         } catch (error) {
             res.status(500).json({ message: 'Erro ao deletar entrada de diário' });
+        }
+    }
+
+    async getJournalEntryById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.userId;
+
+            const journalEntry = await prisma.journalEntry.findUnique({ where: { id } });
+            if (!journalEntry) {
+                res.status(404).json({ message: 'Entrada de diário não encontrada' });
+                return;
+            }
+
+            const check = await checkCampaignAccess(journalEntry.campaignId, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
+            }
+
+            if (check.role === 'participant' && !journalEntry.visibleToPlayers) {
+                res.status(404).json({ message: 'Entrada de diário não encontrada' });
+                return;
+            }
+
+            res.json(journalEntry);
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao buscar entrada de diário' });
         }
     }
 }
