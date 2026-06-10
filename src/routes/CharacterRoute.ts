@@ -10,6 +10,10 @@ const charactersController = new CharactersController();
 
 router.get('/campaign/:campaignId', (req, res) => charactersController.getCharactersByCampaignId(req, res));
 
+router.get('/mine', (req, res) => charactersController.getMyCharacters(req, res));
+
+router.get('/:id', (req, res) => charactersController.getCharacterById(req, res));
+
 router.post('/', validateSchema(createCharacterSchema), (req, res) => charactersController.createCharacter(req, res));
 
 router.put('/:id', validateSchema(updateCharacterSchema), (req, res) => charactersController.updateCharacter(req, res));

@@ -112,6 +112,39 @@ export class CharactersController {
         }
     }
 
+    async getCharacterById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.userId;
+
+            const permission = await checkCharacterPermission(id, userId);
+            if (!permission.ok) {
+                res.status(permission.status).json({ message: permission.message });
+                return;
+            }
+
+            const character = await prisma.character.findUnique({ where: { id } });
+            res.json(character);
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao buscar personagem' });
+        }
+    }
+
+    async getMyCharacters(req: Request, res: Response) {
+        try {
+            const userId = req.userId;
+
+            const characters = await prisma.character.findMany({
+                where: { userId },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            res.json(characters);
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao buscar personagens' });
+        }
+    }
+
     async deleteCharacter(req: Request, res: Response) {
         try {
             const { id } = req.params;

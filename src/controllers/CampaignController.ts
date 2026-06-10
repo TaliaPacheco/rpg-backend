@@ -1,7 +1,7 @@
 import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import { deleteUploadedFile, getFilenameFromPath } from '../middleware/uploadMiddleware';
-import { checkCampaignOwnership } from '../lib/ownership';
+import { checkCampaignOwnership, checkCampaignAccess } from '../lib/ownership';
 
 export class CampaignController {
     async getMyCampaigns(req: Request, res: Response) {
@@ -201,6 +201,50 @@ export class CampaignController {
                 return;
             }
             res.status(500).json({ message: 'Erro ao adicionar participante' });
+        }
+    }
+
+    async getCampaignById(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.userId;
+
+            const access = await checkCampaignAccess(id, userId);
+            if (!access.ok) {
+                res.status(access.status).json({ message: access.message });
+                return;
+            }
+
+            const campaign = await prisma.campaign.findUnique({ where: { id } });
+            res.json(campaign);
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao buscar campanha' });
+        }
+    }
+
+    async getParticipants(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.userId;
+
+            const access = await checkCampaignAccess(id, userId);
+            if (!access.ok) {
+                res.status(access.status).json({ message: access.message });
+                return;
+            }
+
+            const participants = await prisma.campaignParticipant.findMany({
+                where: { campaignId: id },
+                include: {
+                    user: {
+                        select: { id: true, name: true, email: true, profileImage: true }
+                    }
+                }
+            });
+
+            res.json(participants);
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao buscar participantes' });
         }
     }
 

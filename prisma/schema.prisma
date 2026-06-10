@@ -129,7 +129,8 @@ model Quest {
   title       String
   description String?
   status      QuestStatus @default(PENDENTE)
-  reward      String?
+  reward             String?
+  visibleToPlayers   Boolean     @default(false)
   campaignId  String
   campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   createdAt   DateTime    @default(now())
@@ -140,7 +141,8 @@ model Quest {
 
 model JournalEntry {
   id         String   @id @default(uuid())
-  content    String
+  content          String
+  visibleToPlayers Boolean  @default(false)
   eventDate  DateTime
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)

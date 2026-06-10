@@ -6,3 +6,6 @@ dist/
 .DS_Store
 
 /generated/prisma
+
+# Documentos de planejamento (mantidos fora do versionamento)
+docs/superpowers/

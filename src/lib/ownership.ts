@@ -5,6 +5,11 @@ export type OwnershipCheck =
     | { ok: false; status: 404; message: string }
     | { ok: false; status: 403; message: string };
 
+export type CampaignAccessCheck =
+    | { ok: true; role: 'master' | 'participant' }
+    | { ok: false; status: 404; message: string }
+    | { ok: false; status: 403; message: string };
+
 export async function checkCampaignOwnership(
     campaignId: string,
     userId: string
@@ -36,7 +41,7 @@ export async function checkCampaignOwnership(
 export async function checkCampaignAccess(
     campaignId: string,
     userId: string
-): Promise<OwnershipCheck> {
+): Promise<CampaignAccessCheck> {
     if (!campaignId || typeof campaignId !== 'string') {
         return { ok: false, status: 404, message: 'Campanha não encontrada' };
     }
@@ -67,7 +72,7 @@ export async function checkCampaignAccess(
         };
     }
 
-    return { ok: true };
+    return { ok: true, role: isMaster ? 'master' : 'participant' };
 }
 
 export type CharacterPermissionCheck =
