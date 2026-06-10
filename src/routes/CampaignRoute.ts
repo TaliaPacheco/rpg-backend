@@ -10,6 +10,10 @@ const campaignController = new CampaignController();
 
 router.get('/mine', (req, res) => campaignController.getMyCampaigns(req, res));
 
+router.get('/:id', (req, res) => campaignController.getCampaignById(req, res));
+
+router.get('/:id/participants', (req, res) => campaignController.getParticipants(req, res));
+
 router.post('/', validateSchema(createCampaignSchema), (req, res) => campaignController.createCampaign(req, res));
 
 router.put('/:id', validateSchema(updateCampaignSchema), (req, res) => campaignController.updateCampaign(req, res));
