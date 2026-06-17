@@ -12,6 +12,7 @@ import campaignRoutes from './routes/CampaignRoute';
 import characterRoutes from './routes/CharacterRoute';
 import journalEntryRoutes from './routes/JournalEntryRoute';
 import questRoutes from './routes/QuestRoutes';
+import sseRoutes from './routes/sseRoute';
 
 dotenv.config();
 
@@ -24,6 +25,8 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use('/users', userRoutes);
+
+app.use('/campaigns', sseRoutes);
 
 app.use(authMiddleware)
 
