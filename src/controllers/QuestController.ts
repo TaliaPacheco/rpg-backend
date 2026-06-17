@@ -1,6 +1,7 @@
 import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import { checkCampaignAccess, checkCampaignOwnership } from '../lib/ownership';
+import { publish } from '../sse/sseHub';
 
 export class QuestsController {
     async getQuestsByCampaignId(req: Request, res: Response) {
@@ -69,7 +70,7 @@ export class QuestsController {
 
             const quest = await prisma.quest.findUnique({
                 where: { id },
-                select: { campaignId: true }
+                select: { campaignId: true, visibleToPlayers: true }
             });
 
             if (!quest) {
@@ -93,6 +94,10 @@ export class QuestsController {
                     visibleToPlayers
                 }
             });
+
+            if (quest.visibleToPlayers === false && updatedQuest.visibleToPlayers === true) {
+                publish(quest.campaignId, { tipo: 'quest', id });
+            }
 
             res.json({ message: 'Quest atualizada com sucesso', quest: updatedQuest });
         } catch (error) {
