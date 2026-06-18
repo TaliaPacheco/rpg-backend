@@ -1,6 +1,7 @@
 import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import { checkCampaignAccess, checkCampaignOwnership } from '../lib/ownership';
+import { publish } from '../sse/sseHub';
 
 export class journalEntriesController {
     async getJournalEntriesByCampaignId(req: Request, res: Response) {
@@ -67,7 +68,7 @@ export class journalEntriesController {
 
             const journalEntry = await prisma.journalEntry.findUnique({
                 where: { id },
-                select: { campaignId: true }
+                select: { campaignId: true, visibleToPlayers: true }
             });
 
             if (!journalEntry) {
@@ -85,6 +86,10 @@ export class journalEntriesController {
                 where: { id },
                 data: { content, visibleToPlayers }
             });
+
+            if (journalEntry.visibleToPlayers === false && updatedJournalEntry.visibleToPlayers === true) {
+                publish(journalEntry.campaignId, { tipo: 'journal', id });
+            }
 
             res.json({ message: 'Entrada de diário atualizada com sucesso', journalEntry: updatedJournalEntry });
         } catch (error) {
