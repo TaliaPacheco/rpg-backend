@@ -7,7 +7,18 @@ type TicketData = {
 };
 
 const TICKET_TTL_MS = 30_000;
+const SWEEP_INTERVAL_MS = 60_000;
 const tickets = new Map<string, TicketData>();
+
+// Faxineiro: remove tickets vencidos que nunca foram consumidos, evitando
+// crescimento ilimitado do Map. unref() não impede o processo de encerrar.
+const sweeper = setInterval(() => {
+    const now = Date.now();
+    for (const [ticket, data] of tickets) {
+        if (data.expiresAt < now) tickets.delete(ticket);
+    }
+}, SWEEP_INTERVAL_MS);
+sweeper.unref();
 
 export function issueTicket(userId: string, campaignId: string): string {
     const ticket = crypto.randomBytes(32).toString('hex');
