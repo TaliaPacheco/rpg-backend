@@ -23,7 +23,7 @@ router.post('/:id/events/ticket', authMiddleware, async (req: Request, res: Resp
 });
 
 // Abrir o stream SSE — autentica pelo ticket (EventSource não manda header)
-router.get('/:id/events', (req: Request, res: Response) => {
+router.get('/:id/events', async (req: Request, res: Response) => {
     const { id } = req.params;
     const ticket = typeof req.query.ticket === 'string' ? req.query.ticket : undefined;
 
@@ -35,6 +35,14 @@ router.get('/:id/events', (req: Request, res: Response) => {
     const userId = consumeTicket(ticket, id);
     if (!userId) {
         res.status(401).json({ message: 'Ticket inválido ou expirado' });
+        return;
+    }
+
+    // Reverifica o acesso no momento de abrir o stream: o ticket pode ter sido
+    // emitido até 30s antes, e o acesso do usuário pode ter mudado nesse meio-tempo.
+    const access = await checkCampaignAccess(id, userId);
+    if (!access.ok) {
+        res.status(access.status).json({ message: access.message });
         return;
     }
 

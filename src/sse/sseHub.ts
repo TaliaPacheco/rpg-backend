@@ -36,6 +36,10 @@ export function publish(campaignId: string, evento: { tipo: string; id: string }
 
     const payload = `event: reveal\ndata: ${JSON.stringify(evento)}\n\n`;
     for (const res of set) {
-        res.write(payload);
+        try {
+            res.write(payload);
+        } catch {
+            // Conexão morta; será removida do set pelo evento 'close'.
+        }
     }
 }
