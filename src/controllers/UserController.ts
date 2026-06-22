@@ -89,10 +89,16 @@ export class UserController {
                 return
             }
 
-            const user = await prisma.user.findUnique({
-                where: { id },
-                omit: { password: true },
-            })
+            const isSelf = req.userId === id
+            const user = isSelf
+                ? await prisma.user.findUnique({
+                    where: { id },
+                    omit: { password: true },
+                })
+                : await prisma.user.findUnique({
+                    where: { id },
+                    select: { id: true, name: true, profileImage: true },
+                })
 
             if (!user) {
                 res.status(404).json({ message: 'Usuário não encontrado'})
