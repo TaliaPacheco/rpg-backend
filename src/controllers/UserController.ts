@@ -161,8 +161,13 @@ export class UserController {
                 data: updatedData,
             })
 
-            res.status(200).json({ message: 'Usuario atualizado com sucesso', Usuario: updatedUser })
-        } catch (error) {
+            const { password: _omit, ...safeUser } = updatedUser
+            res.status(200).json({ message: 'Usuario atualizado com sucesso', Usuario: safeUser })
+        } catch (error: any) {
+            if (error.code === 'P2002') {
+                res.status(409).json({ message: 'Email já está em uso' })
+                return
+            }
             res.status(500).json({ message: 'Erro ao atualizar usuario' })
         }
     }
