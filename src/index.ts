@@ -35,9 +35,8 @@ app.use('/characters', characterRoutes);
 app.use('/journal-entries', journalEntryRoutes);
 app.use('/quests', questRoutes);
 
-app.get('/', async (req: Request, res: Response)  => {
-    const users = await prisma.user.findMany()
-    res.json({message: 'Funcionando, papai!', users})
+app.get('/', (req: Request, res: Response) => {
+    res.json({ message: 'BitDragon API no ar' })
 })
 
 app.listen(port, () => {
