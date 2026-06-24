@@ -4,6 +4,7 @@ import { CampaignController } from '../controllers/CampaignController';
 import { CampaignInviteController } from '../controllers/CampaignInviteController';
 import { validateSchema } from '../middleware/validateSchema';
 import { createCampaignSchema, updateCampaignSchema } from '../schemas/campaingSchema';
+import { joinCampaignSchema } from '../schemas/joinSchema';
 import { uploadMiddleware } from '../middleware/uploadMiddleware';
 
 const router = Router();
@@ -11,6 +12,8 @@ const campaignController = new CampaignController();
 const inviteController = new CampaignInviteController();
 
 router.get('/mine', (req, res) => campaignController.getMyCampaigns(req, res));
+
+router.post('/join', validateSchema(joinCampaignSchema), (req, res) => inviteController.joinByCode(req, res));
 
 router.get('/:id', (req, res) => campaignController.getCampaignById(req, res));
 
