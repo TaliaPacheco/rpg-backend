@@ -152,61 +152,6 @@ export class CampaignController {
         }
     }
 
-    async addParticipant(req: Request, res: Response) {
-        try {
-            const { id } = req.params;
-            const userId = req.userId;
-            const { userId: participantUserId } = req.body;
-
-            if (!participantUserId || typeof participantUserId !== 'string') {
-                res.status(400).json({ message: 'UserId do participante inválido' });
-                return;
-            }
-
-            const check = await checkCampaignOwnership(id, userId);
-            if (!check.ok) {
-                res.status(check.status).json({ message: check.message });
-                return;
-            }
-
-            const user = await prisma.user.findUnique({
-                where: { id: participantUserId }
-            });
-
-            if (!user) {
-                res.status(404).json({ message: 'Usuário não encontrado' });
-                return;
-            }
-
-            const participant = await prisma.campaignParticipant.create({
-                data: {
-                    campaignId: id,
-                    userId: participantUserId
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            profileImage: true
-                        }
-                    }
-                }
-            });
-
-            res.status(201).json({
-                message: 'Participante adicionado com sucesso',
-                participant
-            });
-        } catch (error: any) {
-            if (error.code === 'P2002') {
-                res.status(400).json({ message: 'Usuário já é participante desta campanha' });
-                return;
-            }
-            res.status(500).json({ message: 'Erro ao adicionar participante' });
-        }
-    }
-
     async getCampaignById(req: Request, res: Response) {
         try {
             const { id } = req.params;

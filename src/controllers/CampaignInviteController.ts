@@ -108,4 +108,88 @@ export class CampaignInviteController {
             res.status(500).json({ message: 'Erro ao pedir entrada na campanha' });
         }
     }
+
+    async listJoinRequests(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.userId;
+
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
+            }
+
+            const requests = await prisma.joinRequest.findMany({
+                where: { campaignId: id, status: 'PENDENTE' },
+                include: { user: { select: { id: true, name: true, profileImage: true } } },
+                orderBy: { createdAt: 'asc' }
+            });
+
+            res.json(requests);
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao listar pedidos' });
+        }
+    }
+
+    async approveJoinRequest(req: Request, res: Response) {
+        try {
+            const { id, requestId } = req.params;
+            const userId = req.userId;
+
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
+            }
+
+            const request = await prisma.joinRequest.findUnique({ where: { id: requestId } });
+            if (!request || request.campaignId !== id || request.status !== 'PENDENTE') {
+                res.status(404).json({ message: 'Pedido não encontrado' });
+                return;
+            }
+
+            try {
+                await prisma.campaignParticipant.create({
+                    data: { campaignId: id, userId: request.userId }
+                });
+            } catch (error: any) {
+                if (error.code !== 'P2002') throw error;
+            }
+
+            await prisma.joinRequest.delete({ where: { id: requestId } });
+
+            res.json({ message: 'Pedido aprovado' });
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao aprovar pedido' });
+        }
+    }
+
+    async declineJoinRequest(req: Request, res: Response) {
+        try {
+            const { id, requestId } = req.params;
+            const userId = req.userId;
+
+            const check = await checkCampaignOwnership(id, userId);
+            if (!check.ok) {
+                res.status(check.status).json({ message: check.message });
+                return;
+            }
+
+            const request = await prisma.joinRequest.findUnique({ where: { id: requestId } });
+            if (!request || request.campaignId !== id || request.status !== 'PENDENTE') {
+                res.status(404).json({ message: 'Pedido não encontrado' });
+                return;
+            }
+
+            await prisma.joinRequest.update({
+                where: { id: requestId },
+                data: { status: 'RECUSADO' }
+            });
+
+            res.json({ message: 'Pedido recusado' });
+        } catch (error) {
+            res.status(500).json({ message: 'Erro ao recusar pedido' });
+        }
+    }
 }

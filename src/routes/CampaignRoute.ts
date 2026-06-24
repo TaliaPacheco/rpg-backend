@@ -29,9 +29,13 @@ router.put('/:id', validateSchema(updateCampaignSchema), (req, res) => campaignC
 
 router.post('/:id/upload-campaign-image', uploadMiddleware.single('campaignImage'), (req: Request, res: Response) => campaignController.uploadCampaignImage(req, res));
 
-router.post('/:id/participants', (req, res) => campaignController.addParticipant(req, res));
-
 router.delete('/:id/participants/:userId', (req, res) => campaignController.removeParticipant(req, res));
+
+router.get('/:id/join-requests', (req, res) => inviteController.listJoinRequests(req, res));
+
+router.post('/:id/join-requests/:requestId/approve', (req, res) => inviteController.approveJoinRequest(req, res));
+
+router.post('/:id/join-requests/:requestId/decline', (req, res) => inviteController.declineJoinRequest(req, res));
 
 router.delete('/:id', (req, res) => campaignController.deleteCampaign(req, res));
 
