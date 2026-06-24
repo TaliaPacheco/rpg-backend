@@ -2,6 +2,7 @@ import type { Request, Response } from '../types/express';
 import { prisma } from '../../lib/prisma';
 import { deleteUploadedFile, getFilenameFromPath } from '../middleware/uploadMiddleware';
 import { checkCampaignOwnership, checkCampaignAccess } from '../lib/ownership';
+import { generateUniqueInviteCode } from '../lib/inviteCode';
 
 export class CampaignController {
     async getMyCampaigns(req: Request, res: Response) {
@@ -40,12 +41,14 @@ export class CampaignController {
             const userId = req.userId;
             const { title, description, setting } = req.body;
 
+            const inviteCode = await generateUniqueInviteCode();
             const newCampaign = await prisma.campaign.create({
                 data: {
                     title,
                     description,
                     setting,
-                    userId
+                    userId,
+                    inviteCode
                 }
             });
 
