@@ -35,6 +35,7 @@ model User {
   campaigns            Campaign[]
   characters           Character[]
   campaignParticipants CampaignParticipant[]
+  joinRequests         JoinRequest[]
 }
 
 model Campaign {
@@ -44,6 +45,7 @@ model Campaign {
   setting        String?
   status         CampaignStatus        @default(ATIVA)
   campaignImage  String?
+  inviteCode     String?               @unique
   userId         String
   user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt      DateTime              @default(now())
@@ -51,6 +53,7 @@ model Campaign {
   quests         Quest[]
   journalEntries JournalEntry[]
   participants   CampaignParticipant[]
+  joinRequests   JoinRequest[]
 
   @@index([userId])
 }
@@ -149,5 +152,24 @@ model JournalEntry {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@index([campaignId])
+}
+
+enum JoinRequestStatus {
+  PENDENTE
+  RECUSADO
+}
+
+model JoinRequest {
+  id         String            @id @default(uuid())
+  campaignId String
+  userId     String
+  status     JoinRequestStatus @default(PENDENTE)
+  campaign   Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([campaignId, userId])
   @@index([campaignId])
 }
